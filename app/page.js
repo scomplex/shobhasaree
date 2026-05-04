@@ -20,7 +20,7 @@ export default function Home() {
 
       {/* HEADER */}
       <div className="bg-pink-500 text-white p-4 rounded-2xl text-xl font-bold flex justify-between">
-        Sapna Saree Centre
+        Shobha Saree
         <button onClick={unlock}>⚙️</button>
       </div>
 
