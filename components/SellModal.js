@@ -4,6 +4,7 @@ import { useState } from "react";
 export default function SellModal({ item, close, refresh }) {
   const [sp, setSp] = useState("");
   const [qty, setQty] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const sell = async () => {
     if (!sp || !qty) {
@@ -11,17 +12,38 @@ export default function SellModal({ item, close, refresh }) {
       return;
     }
 
-    await fetch("/api/sale", {
-      method: "POST",
-      body: JSON.stringify({
-        id: item._id,
-        sellingPrice: Number(sp),
-        quantity: Number(qty),
-      }),
-    });
+    try {
+      setLoading(true);
 
-    close();
-    refresh();
+      const res = await fetch("/api/sale", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: item._id,
+          sellingPrice: Number(sp),
+          quantity: Number(qty),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Sale failed");
+      }
+
+      alert("✅ Sale recorded successfully");
+
+      refresh();
+      close();
+
+    } catch (err) {
+      console.error(err);
+      alert("❌ Error recording sale");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -53,8 +75,9 @@ export default function SellModal({ item, close, refresh }) {
 
           <div className="flex items-center gap-3 mt-1">
             <button
+              disabled={loading}
               onClick={() => setQty((q) => Math.max(1, q - 1))}
-              className="bg-gray-200 px-4 py-2 rounded-xl text-lg"
+              className="bg-gray-200 px-4 py-2 rounded-xl text-lg disabled:opacity-50"
             >
               −
             </button>
@@ -64,25 +87,27 @@ export default function SellModal({ item, close, refresh }) {
             </div>
 
             <button
+              disabled={loading}
               onClick={() => setQty((q) => q + 1)}
-              className="bg-gray-200 px-4 py-2 rounded-xl text-lg"
+              className="bg-gray-200 px-4 py-2 rounded-xl text-lg disabled:opacity-50"
             >
               +
             </button>
           </div>
         </div>
 
-       
-        {/* BUTTONS */}
+        {/* SELL BUTTON */}
         <button
           onClick={sell}
-          className="bg-pink-500 text-white w-full p-3 rounded-xl font-bold text-lg"
+          disabled={loading}
+          className="bg-pink-500 text-white w-full p-3 rounded-xl font-bold text-lg disabled:opacity-60"
         >
-          SELL
+          {loading ? "⏳ Selling..." : "SELL"}
         </button>
 
         <button
           onClick={close}
+          disabled={loading}
           className="w-full mt-2 text-gray-500"
         >
           Cancel
